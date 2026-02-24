@@ -8,6 +8,7 @@ erDiagram
     uuid id PK
     timestamp createdAt
     timestamp updatedAt
+    character urlHash
     varchar url
     varchar title
     varchar publicationDate

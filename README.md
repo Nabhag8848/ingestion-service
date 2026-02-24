@@ -24,7 +24,7 @@ docker compose up -d
 pnpm install
 
 # Run the server
-pnpm nx serve server
+pnpm nx start server
 ```
 
 The server starts at `http://localhost:3000` by default.

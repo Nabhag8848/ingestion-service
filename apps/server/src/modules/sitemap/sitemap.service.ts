@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { XMLParser } from 'fast-xml-parser';
 import { SiteMapEntity } from '@/database/entities';
 import { SitemapNewsEntryDto, SitemapPageDto, SitemapQueryDto } from './sitemap.dto';
@@ -34,12 +34,12 @@ export class SitemapService {
   ) {}
 
   async findAll(query: SitemapQueryDto): Promise<SitemapPageDto> {
-    const { after, before, page = 1, limit = 20 } = query;
+    const { after, before, page = 1, limit = 10 } = query;
 
     const qb = this.sitemapRepository.createQueryBuilder('s');
 
-    if (after) qb.andWhere('s.publicationDate > :after', { after });
-    if (before) qb.andWhere('s.publicationDate < :before', { before });
+    if (after) qb.andWhere('s.publicationDate::timestamptz > :after', { after });
+    if (before) qb.andWhere('s.publicationDate::timestamptz < :before', { before });
 
     const [data, total] = await qb
       .orderBy('s.publicationDate', 'DESC')
@@ -52,8 +52,10 @@ export class SitemapService {
 
   async fetchAndStore(): Promise<SiteMapEntity[]> {
     const entries = await this.fetchSitemap();
+    if (entries.length === 0) return [];
     await this.sitemapRepository.upsert(entries, { conflictPaths: ['urlHash'], skipUpdateIfNoValuesChanged: true });
-    return this.sitemapRepository.find();
+    const hashes = entries.map((e) => e.urlHash);
+    return this.sitemapRepository.findBy({ urlHash: In(hashes) });
   }
 
   async fetchSitemap(): Promise<SitemapNewsEntryDto[]> {
@@ -92,7 +94,7 @@ export class SitemapService {
         urlHash: hashUrl(url),
         url,
         title: news['news:title'] ?? '',
-        publicationDate: news['news:publication_date'] ?? undefined,
+        publicationDate: news['news:publication_date'],
         keywords,
       };
     });

@@ -107,7 +107,7 @@ Entries are ordered by publication date (descending).
 
 ---
 
-#### `GET /sitemap/ingest`
+#### `GET /sitemap/ingest` (just for starting ingestion)
 
 Fetches the latest news sitemap from NDTV (`https://www.ndtv.com/sitemap/google-news-sitemap`), parses it, and upserts entries into the database.
 
